@@ -1,5 +1,6 @@
 import json
 from fastapi import FastAPI
+from apscheduler.schedulers.background import BackgroundScheduler
 import uvicorn
 
 import config
@@ -49,7 +50,6 @@ async def add_dns_log(log_line: str):
     if not all(results):
         return False
     return True
-
 
 
 @app.put("/zeek/http/")
@@ -113,7 +113,7 @@ async def event_details(zeek_id: str) -> schema.EventDetails:
         await pipeline.hgetall(key_name)
     all_logs = pipeline.execute()
     for entry, log_name in zip(all_logs, log_names):
-        event = schema.Event(zeek_id=entry['uid'], log_type=log_name,log=entry)
+        event = schema.Event(zeek_id=entry['uid'], log_type=log_name, log=entry)
         response.events.append(event)
     return response
 
@@ -139,10 +139,17 @@ async def recompute_stats():
             max_key = key
         size = redis_server.scard(str(key))
         key_sizes[str(key)] = size
-    stats = dict(min_key=min_key, max_key=max_key, sizes=key_sizes)
+    stat_data = dict(min_key=min_key, max_key=max_key, sizes=key_sizes)
     pipeline = redis_server.pipeline()
-    redis_interface.set_hash(pipeline, "stats", stats)
+    redis_interface.set_hash(pipeline, "stats", stat_data)
     pipeline.execute()
+
+
+@app.on_event('startup')
+def init_data():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(recompute_stats, 'cron', minute='*/5')
+    scheduler.start()
 
 
 if __name__ == "__main__":
