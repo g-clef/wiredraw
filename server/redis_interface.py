@@ -55,6 +55,12 @@ def append_to_list(conn: redis.Redis, key: str, value: str, timeout: int = 10):
     return True
 
 
+def add_to_set(conn: redis.Redis, key: str, value: str, timeout: int = 10):
+    identifier = acquire_lock_with_expiration(conn, key, timeout)
+    conn.sadd(key, value)
+    release_lock(conn, key, identifier)
+
+
 def set_hash(conn: redis.Redis, key: str, hash_vals: Dict, timeout: int = 10):
     identifier = acquire_lock_with_expiration(conn, key, timeout)
     conn.hset(key, mapping=hash_vals)

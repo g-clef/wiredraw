@@ -3,3 +3,4 @@ FastAPI
 pydantic
 uvicorn
 redis
+apscheduler

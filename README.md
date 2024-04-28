@@ -19,7 +19,7 @@ Backend:
   * Backed by Redis server
   * Information storage keys:
     * timestamp keys are json with the list of active connections at that point and an integer of the length. Do in <x> second chunks. 
-      * Format: `<epoch_timestamp>:  ["xhe8db", "d7ldy6a", ...]`
+      * Format: `<epoch_timestamp>:  set("xhe8db", "d7ldy6a", ...)`
     * connection keys are json with source/dest/size keys as well as key names for conn/dns/etc detail entries
       * Format: `"xhe8db": {"conn: "xhe8db.conn", "http": "xhe8db.http", "ssl": "xhe8db.ssl"}`
     * detail entries contain the full set of information from the bro log for that particular entry
