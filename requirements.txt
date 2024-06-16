@@ -1,0 +1,6 @@
+panda3d[all]
+FastAPI
+pydantic
+uvicorn
+redis
+apscheduler
