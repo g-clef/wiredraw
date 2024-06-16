@@ -13,7 +13,25 @@ UI:
    * Click on edges for information about connection (protocol, bytes, decodes, etc). If more than one protocol decode available, tile them one after another.
    * Has setup page to log into backend server
    * Stretch goal: draw histogram across scrubber timeline to show total amount of traffic
-
+    Architecture: 
+     * Main process and subprocess
+     * Subprocess handles connecting to backend, collecting graph data, offering interface to UI
+     * main process:
+       * draws graph
+       * takes user input for view of graph
+       * takes user input for present time (offers "play" button to automatically tick time forward)
+       * owns the "present time" from the point of view of the graph  
+       * updates the subprocess with present time
+       * queries subprocess as time moves forward to get diffs of graph
+       * Graphs full graph each 30 seconds to ensure sync
+     * Subprocess:
+       * Manages a buffer forward and backward of the state of the graph
+       * queries backend to build buffer 
+       * Builds graphs of each event 
+       * offers full graph and diff methods for each second going forward
+       * does layout of graph, layout included with diffs and full graph
+       * handles getting details of an edge or node if the user clicks on it
+       * queries backend to collect present stats of the graph (allowed times, etc)
 
 Backend:
   * Backed by Redis server
