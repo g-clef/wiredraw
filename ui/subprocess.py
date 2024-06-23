@@ -6,6 +6,7 @@ from typing import Tuple
 
 import requests
 import graph_tool
+import graph_tool.draw
 
 
 class GraphManager(Process):
@@ -64,12 +65,14 @@ class GraphManager(Process):
             #     direction: int  # in bytes - out bytes
             nodes[event['source_ip']].add(event['dest_ip'])
         new_graph = graph_tool.Graph(nodes)
-        # TODO: set edge and node properties here
+        new_graph.vp['zeek_props'] = node_props
+        new_graph.ep['zeek_props'] = edge_props
         if (time-1) in self.graphs:
             diffs = self._diff_graphs(new_graph, self.graphs[time-1])
         else:
             diffs = None
-        # TODO: layout
+        layout = graph_tool.draw.arf_layout(new_graph, dim=3)
+        new_graph.vp['layout'] = layout
         return new_graph, diffs
 
     def _diff_graphs(self, graph1, graph2):
@@ -105,13 +108,17 @@ class GraphManager(Process):
                 return False
             return self.graphs[time]
 
-    def get_node_details(self, node):
-        # TODO: query backend for node details, return them
-        pass
+    def get_node_details(self, timestamp: int, node: str):
+        graph = self.graphs[timestamp]
+        vertex = graph.vertex(node)
+        response = graph.vp[vertex]['zeek_props']
+        return response
 
-    def get_edge_details(self, edge):
-        # TODO: query backend for edge details, return them
-        pass
+    def get_edge_details(self, timestamp: int, src: str, dst: str):
+        graph = self.graphs[timestamp]
+        edge = graph.edge(src, dst)
+        response = graph.ep[edge]['zeek_props']
+        return response
 
     def prune_graphs(self):
         present_time = self.get_time()

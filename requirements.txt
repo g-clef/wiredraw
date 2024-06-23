@@ -5,3 +5,4 @@ uvicorn
 redis
 apscheduler
 requests
+graph-tool
