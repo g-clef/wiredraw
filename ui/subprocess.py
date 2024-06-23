@@ -1,5 +1,6 @@
 import configparser
-from multiprocessing import Process, Lock
+import time as py_time
+from multiprocessing import Process, Lock, Event
 from collections import defaultdict
 from typing import Tuple
 
@@ -17,10 +18,18 @@ class GraphManager(Process):
         self.details_url = f"{self.server}/details"
         self.timeframe_url = f"{self.server}/stats"
         self.min_buffer = config["UI"]["buffer"]
+        self.refresh_time = config["UI"]["background_refresh_interval"]
         self.graphs, diffs = self.initialize_graphs()
         self.present_time = None
         self.time_lock = Lock()
         self.graph_lock = Lock()
+        self.shutdown = Event()
+        self.min_key = None
+        self.max_key = None
+        self.event_historgram = dict()
+
+    def shutdown(self):
+        self.shutdown.set()
 
     def set_time(self, new_time):
         with self.time_lock:
@@ -63,6 +72,10 @@ class GraphManager(Process):
         # TODO: layout
         return new_graph, diffs
 
+    def _diff_graphs(self, graph1, graph2):
+        # TODO: return the difference (nodes and edges) between the two graphs
+        pass
+
     def _update_graphs(self):
         present_time = self.get_time()
         if present_time not in self.graphs:
@@ -101,13 +114,27 @@ class GraphManager(Process):
         pass
 
     def prune_graphs(self):
-        # TODO: check the size of self.graphs and self.diffs, prune if it's too big
-        pass
+        present_time = self.get_time()
+        with self.graph_lock:
+            for time in self.graphs.keys():
+                time = int(time)
+                if abs(time - present_time) > self.min_buffer:
+                    del(self.graphs[time])
+            for time in self.diffs.keys():
+                time = int(time)
+                if abs(time - present_time) > self.min_buffer:
+                    del(self.diffs[time])
+
 
     def update_properties(self):
-        # TODO: get properties of set of graphs from server
-        pass
+        response = requests.get(self.timeframe_url)
+        data = response.json()
+        self.min_key = data['min_key']
+        self.max_key = data['max_key']
+        self.histogram = data['sizes']
 
     def run(self):
-        # TODO: event loop that starts up, gets graph properties, and calls prune periodically
-        pass
+        while not self.shutdown.is_set():
+            self.update_properties()
+            self.prune_graphs()
+            py_time.sleep(self.refresh_time)

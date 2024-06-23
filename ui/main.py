@@ -33,5 +33,5 @@ class WireDrawUI(ShowBase):
 
 if __name__ == "__main__":
     app = WireDrawUI()
-    child
+
     app.run()
