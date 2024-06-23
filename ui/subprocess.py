@@ -27,7 +27,7 @@ class GraphManager(Process):
         self.shutdown = Event()
         self.min_key = None
         self.max_key = None
-        self.event_historgram = dict()
+        self.event_histogram = dict()
 
     def shutdown(self):
         self.shutdown.set()
@@ -126,11 +126,11 @@ class GraphManager(Process):
             for time in self.graphs.keys():
                 time = int(time)
                 if abs(time - present_time) > self.min_buffer:
-                    del(self.graphs[time])
+                    del self.graphs[time]
             for time in self.diffs.keys():
                 time = int(time)
                 if abs(time - present_time) > self.min_buffer:
-                    del(self.diffs[time])
+                    del self.diffs[time]
 
 
     def update_properties(self):
@@ -138,7 +138,7 @@ class GraphManager(Process):
         data = response.json()
         self.min_key = data['min_key']
         self.max_key = data['max_key']
-        self.histogram = data['sizes']
+        self.event_histogram = data['sizes']
 
     def run(self):
         while not self.shutdown.is_set():
