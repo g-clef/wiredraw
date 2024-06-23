@@ -67,11 +67,21 @@ class GraphManager(Process):
         new_graph = graph_tool.Graph(nodes)
         new_graph.vp['zeek_props'] = node_props
         new_graph.ep['zeek_props'] = edge_props
+        # make the diffs to the previous, if it exists.
+        # also, grab the nearest layout and provide that
+        # to the layout algorithm as the starting point for the
+        # layout of the new graph.
         if (time-1) in self.graphs:
             diffs = self._diff_graphs(new_graph, self.graphs[time-1])
+            layout = self.graphs[time-1].vp['layout'].copy()
         else:
+            if (time+1) in self.graphs:
+                layout = self.graphs[time+1].vp['layout'].copy()
+            else:
+                # TODO: validate that the default arf-layout response is type "vector<double>"
+                layout = new_graph.new_vertex_property("vector<double>")
             diffs = None
-        layout = graph_tool.draw.arf_layout(new_graph, dim=3)
+        layout = graph_tool.draw.arf_layout(new_graph, pos=layout, dim=3)
         new_graph.vp['layout'] = layout
         return new_graph, diffs
 
