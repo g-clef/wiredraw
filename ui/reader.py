@@ -63,6 +63,7 @@ class GraphManager(Process):
             #     zeek_id: str
             #     total_bytes: int  # in bytes + out bytes
             #     direction: int  # in bytes - out bytes
+            # TODO: define node and edge props here.
             nodes[event['source_ip']].add(event['dest_ip'])
         new_graph = graph_tool.Graph(nodes)
         new_graph.vp['zeek_props'] = node_props

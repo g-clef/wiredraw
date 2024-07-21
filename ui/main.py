@@ -1,7 +1,7 @@
 from direct.showbase.ShowBase import ShowBase
 from direct.actor.Actor import Actor
 
-from subprocess import GraphManager
+from reader import GraphManager
 
 
 class WireDrawUI(ShowBase):
@@ -16,7 +16,7 @@ class WireDrawUI(ShowBase):
         self.scene.setPos(-8, 42, 0)
 
     def add_panda(self, position=(0, 0,  0), scale=(0.005, 0.005, 0.005)):
-        pandaActor = Actor("models/panda-model",)
+        pandaActor = Actor("models/panda",)
         pandaActor.setScale(*scale)
         pandaActor.reparentTo(self.render)
         pandaActor.setPos(*position)
