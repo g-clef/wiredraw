@@ -7,37 +7,47 @@ from typing import Tuple
 import requests
 import graph_tool
 import graph_tool.draw
+from graph_tool.util import find_vertex
 
 
 class GraphManager(Process):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, start_time: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        parser = configparser.ConfigParser()
-        config = parser.read("wiredraw.conf")
-        self.server = config["Server"]['URL']
-        self.events_url = f"{self.server}/events/list"
-        self.details_url = f"{self.server}/details"
-        self.timeframe_url = f"{self.server}/stats"
-        self.min_buffer = config["UI"]["buffer"]
-        self.refresh_time = config["UI"]["background_refresh_interval"]
-        self.graphs, diffs = self.initialize_graphs()
-        self.present_time = None
+        self.present_time = start_time
         self.time_lock = Lock()
         self.graph_lock = Lock()
         self.shutdown = Event()
         self.min_key = None
         self.max_key = None
         self.event_histogram = dict()
+        parser = configparser.ConfigParser()
+        parser.read("wiredraw.conf")
+        self.server = parser["Server"]['URL']
+        self.events_url = f"{self.server}/events/list"
+        self.details_url = f"{self.server}/details"
+        self.timeframe_url = f"{self.server}/stats"
+        self.min_buffer = int(parser["UI"]["buffer"])
+        self.refresh_time = int(parser["UI"]["background_refresh_interval"])
+        self.graphs, diffs = self.initialize_graphs()
+
 
     def shutdown(self):
         self.shutdown.set()
+
+    def has_node(self, time, node):
+        if time in self.graphs:
+            try:
+                return self.graphs[time].vertex(node)
+            except ValueError:
+                return False
+        return False
 
     def set_time(self, new_time):
         with self.time_lock:
             self.present_time = new_time
         return True
 
-    def get_time(self):
+    def get_time(self) -> int:
         with self.time_lock:
             return self.present_time
 
